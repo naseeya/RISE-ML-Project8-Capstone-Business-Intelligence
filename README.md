@@ -1,5 +1,5 @@
 # 🏢 Project 8: Industry-Ready End-to-End ML System for Business Intelligence
-### RISE Internship — Machine Learning & AI | Tamizan Skills
+### RISE Internship — Machine Learning & AI | Tamizhan Skills
 
 ---
 
@@ -205,17 +205,6 @@ jupyter notebook Business_Intelligence_RISE_Project8.ipynb
 - Translating ML outputs into business decisions
 - Deploying a production-grade dashboard
 
-**Job roles targeted:** Machine Learning Engineer · Data Scientist · AI Analyst · Business Intelligence Analyst
-
 ---
 
-## 📞 Contact
-
-**RISE Internship | Tamizan Skills**
-🌐 [www.tamizhanskills.com](https://www.tamizhanskills.com)
-📧 Rise@tamizhanskills.com
-📱 +91 6383418100
-
----
-
-*Built as part of the RISE Internship — Machine Learning & AI track by Tamizan Skills*
+*Built as part of the RISE Internship — Machine Learning & AI track by Tamizhan Skills*
