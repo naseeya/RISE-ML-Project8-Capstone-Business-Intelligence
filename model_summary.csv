@@ -1,0 +1,8 @@
+Problem,Model,Metric1,Metric2
+Churn Classification,Logistic Regression,F1=0.4091,AUC=0.8932
+Churn Classification,Decision Tree,F1=0.4231,AUC=0.7617
+Churn Classification,Random Forest,F1=0.3721,AUC=0.9258
+Churn Classification,Gradient Boosting,F1=0.4783,AUC=0.9281
+CLV Regression,Linear Regression,MAE=147.85,R²=0.8782
+CLV Regression,Random Forest,MAE=164.22,R²=0.8536
+CLV Regression,Gradient Boosting,MAE=160.44,R²=0.8559

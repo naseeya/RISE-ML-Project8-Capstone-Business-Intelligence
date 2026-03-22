@@ -1,0 +1,503 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>BizIQ — Customer Intelligence Dashboard</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Mono:wght@400;500&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+<style>
+:root{
+  --bg0:#08090d;
+  --bg1:#0e0f17;
+  --bg2:#13141f;
+  --bg3:#1a1b2e;
+  --bg4:#22243a;
+  --accent:#6366f1;
+  --accent2:#818cf8;
+  --accent3:#a5b4fc;
+  --accentglow:rgba(99,102,241,0.15);
+  --accentglow2:rgba(99,102,241,0.08);
+  --danger:#f43f5e;
+  --dangerbg:rgba(244,63,94,0.1);
+  --warn:#f59e0b;
+  --warnbg:rgba(245,158,11,0.1);
+  --success:#10b981;
+  --successbg:rgba(16,185,129,0.1);
+  --t1:#f0f0ff;
+  --t2:#9b9cc4;
+  --t3:#5c5d7a;
+  --border:rgba(255,255,255,0.06);
+  --border2:rgba(99,102,241,0.3);
+  --radius:12px;
+  --radius-sm:8px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{background:var(--bg0);color:var(--t1);font-family:'DM Sans',sans-serif;font-size:14px;min-height:100vh;overflow-x:hidden}
+
+/* ── Scanline texture overlay ── */
+body::before{content:'';position:fixed;inset:0;background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(255,255,255,0.012) 2px,rgba(255,255,255,0.012) 4px);pointer-events:none;z-index:0}
+
+/* ── Ambient glow ── */
+.glow-orb{position:fixed;border-radius:50%;filter:blur(120px);pointer-events:none;z-index:0;opacity:0.35}
+.glow-orb.a{width:600px;height:600px;background:radial-gradient(circle,rgba(99,102,241,0.4),transparent 70%);top:-200px;right:-100px;animation:drift 12s ease-in-out infinite alternate}
+.glow-orb.b{width:400px;height:400px;background:radial-gradient(circle,rgba(244,63,94,0.2),transparent 70%);bottom:-100px;left:-50px;animation:drift 15s ease-in-out infinite alternate-reverse}
+@keyframes drift{0%{transform:translate(0,0)}100%{transform:translate(30px,40px)}}
+
+/* ── Layout ── */
+.shell{position:relative;z-index:1;display:grid;grid-template-columns:220px 1fr;min-height:100vh}
+
+/* ── Sidebar ── */
+.sidebar{background:var(--bg1);border-right:1px solid var(--border);padding:2rem 1.25rem;display:flex;flex-direction:column;gap:2rem;position:sticky;top:0;height:100vh;overflow-y:auto}
+.logo{display:flex;align-items:center;gap:10px}
+.logo-mark{width:36px;height:36px;background:var(--accent);border-radius:10px;display:flex;align-items:center;justify-content:center;font-family:'Syne',sans-serif;font-weight:800;font-size:16px;color:#fff;flex-shrink:0;box-shadow:0 0 20px rgba(99,102,241,0.5)}
+.logo-text{font-family:'Syne',sans-serif;font-weight:700;font-size:18px;color:var(--t1)}
+.logo-sub{font-size:11px;color:var(--t3);font-weight:300}
+.nav-section{display:flex;flex-direction:column;gap:4px}
+.nav-label{font-size:10px;font-weight:600;color:var(--t3);letter-spacing:0.12em;text-transform:uppercase;margin-bottom:4px;padding-left:10px}
+.nav-item{display:flex;align-items:center;gap:10px;padding:9px 10px;border-radius:var(--radius-sm);cursor:pointer;transition:all 0.2s;color:var(--t2);font-size:13px;border:1px solid transparent}
+.nav-item:hover{background:var(--accentglow2);color:var(--t1)}
+.nav-item.active{background:var(--accentglow);color:var(--accent3);border-color:var(--border2)}
+.nav-icon{width:16px;height:16px;opacity:0.7;flex-shrink:0}
+.sidebar-footer{margin-top:auto;padding-top:1rem;border-top:1px solid var(--border)}
+.sidebar-badge{background:var(--accentglow);border:1px solid var(--border2);border-radius:var(--radius-sm);padding:10px 12px}
+.sidebar-badge p{font-size:11px;color:var(--accent3);font-weight:500;margin-bottom:2px}
+.sidebar-badge span{font-size:10px;color:var(--t3)}
+
+/* ── Main content ── */
+.main{padding:2rem;display:flex;flex-direction:column;gap:1.5rem;overflow-x:hidden}
+
+/* ── Topbar ── */
+.topbar{display:flex;align-items:flex-start;justify-content:space-between;gap:1rem;flex-wrap:wrap}
+.page-title{font-family:'Syne',sans-serif;font-size:24px;font-weight:700;color:var(--t1);line-height:1.2}
+.page-title span{color:var(--accent2)}
+.page-sub{font-size:13px;color:var(--t3);margin-top:4px}
+.topbar-right{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.chip{display:flex;align-items:center;gap:6px;background:var(--bg2);border:1px solid var(--border);border-radius:20px;padding:6px 14px;font-size:12px;color:var(--t2)}
+.chip label{color:var(--t3);font-size:11px}
+select{background:transparent;border:none;color:var(--t1);font-size:12px;font-family:'DM Sans',sans-serif;cursor:pointer;outline:none;padding:0 4px}
+select option{background:var(--bg2);color:var(--t1)}
+.live-dot{width:7px;height:7px;border-radius:50%;background:var(--success);box-shadow:0 0 8px var(--success);animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:0.4}}
+
+/* ── KPI Grid ── */
+.kpi-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
+.kpi-card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);padding:1.25rem;position:relative;overflow:hidden;transition:border-color 0.2s,transform 0.2s;cursor:default}
+.kpi-card:hover{border-color:rgba(99,102,241,0.3);transform:translateY(-2px)}
+.kpi-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:var(--accent-bar,var(--accent));opacity:0.7}
+.kpi-card.danger::before{--accent-bar:var(--danger)}
+.kpi-card.warn::before{--accent-bar:var(--warn)}
+.kpi-card.success::before{--accent-bar:var(--success)}
+.kpi-icon{width:34px;height:34px;border-radius:var(--radius-sm);display:flex;align-items:center;justify-content:center;font-size:16px;margin-bottom:12px}
+.kpi-label{font-size:11px;color:var(--t3);text-transform:uppercase;letter-spacing:0.08em;font-weight:500;margin-bottom:6px}
+.kpi-val{font-family:'Syne',sans-serif;font-size:28px;font-weight:700;color:var(--t1);line-height:1}
+.kpi-sub{font-size:11px;margin-top:6px;color:var(--t3)}
+.kpi-sub.up{color:var(--success)}
+.kpi-sub.dn{color:var(--danger)}
+.kpi-sub.warn{color:var(--warn)}
+
+/* ── Chart grid ── */
+.chart-row2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.chart-row3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+.chart-card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);padding:1.25rem;position:relative;transition:border-color 0.2s}
+.chart-card:hover{border-color:rgba(99,102,241,0.25)}
+.card-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:1.25rem}
+.card-title{font-family:'Syne',sans-serif;font-size:13px;font-weight:600;color:var(--t1)}
+.card-badge{font-size:10px;font-weight:500;padding:3px 9px;border-radius:20px;background:var(--accentglow);color:var(--accent3);border:1px solid var(--border2)}
+
+/* ── Table ── */
+.table-wrap{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden}
+.table-head{display:flex;align-items:center;justify-content:space-between;padding:1.25rem 1.25rem 0;margin-bottom:1rem}
+.search-box{background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius-sm);padding:6px 12px;display:flex;align-items:center;gap:8px}
+.search-box input{background:transparent;border:none;outline:none;color:var(--t1);font-size:12px;width:160px;font-family:'DM Sans',sans-serif}
+.search-box input::placeholder{color:var(--t3)}
+table{width:100%;border-collapse:collapse}
+thead tr{border-bottom:1px solid var(--border)}
+th{padding:10px 1.25rem;text-align:left;font-size:11px;color:var(--t3);text-transform:uppercase;letter-spacing:0.08em;font-weight:500;white-space:nowrap}
+td{padding:11px 1.25rem;font-size:12px;color:var(--t2);border-bottom:1px solid var(--border)}
+tbody tr:last-child td{border-bottom:none}
+tbody tr:hover td{background:var(--accentglow2);color:var(--t1)}
+.mono{font-family:'DM Mono',monospace;font-size:11px;color:var(--accent3)}
+.badge{display:inline-flex;align-items:center;gap:4px;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:500}
+.badge.high{background:var(--dangerbg);color:var(--danger);border:1px solid rgba(244,63,94,0.2)}
+.badge.med{background:var(--warnbg);color:var(--warn);border:1px solid rgba(245,158,11,0.2)}
+.badge.low{background:var(--successbg);color:var(--success);border:1px solid rgba(16,185,129,0.2)}
+.prob-bar{display:flex;align-items:center;gap:8px}
+.prob-track{width:56px;height:4px;border-radius:2px;background:rgba(255,255,255,0.08);overflow:hidden}
+.prob-fill{height:100%;border-radius:2px}
+
+/* ── Predict panel ── */
+.predict-panel{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);padding:1.5rem}
+.predict-panel h2{font-family:'Syne',sans-serif;font-size:15px;font-weight:600;color:var(--t1);margin-bottom:4px}
+.predict-panel p{font-size:12px;color:var(--t3);margin-bottom:1.25rem}
+.input-grid{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:10px;margin-bottom:1.25rem}
+.inp-group{display:flex;flex-direction:column;gap:5px}
+.inp-group label{font-size:10px;color:var(--t3);text-transform:uppercase;letter-spacing:0.08em;font-weight:500}
+.inp-group input{background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius-sm);padding:8px 10px;color:var(--t1);font-size:13px;font-family:'DM Sans',sans-serif;outline:none;transition:border-color 0.2s;width:100%}
+.inp-group input:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(99,102,241,0.15)}
+.predict-actions{display:flex;gap:10px;align-items:center}
+.btn-primary{background:var(--accent);color:#fff;border:none;border-radius:var(--radius-sm);padding:10px 22px;font-size:13px;font-weight:500;font-family:'DM Sans',sans-serif;cursor:pointer;transition:all 0.2s;letter-spacing:0.01em}
+.btn-primary:hover{background:#4f46e5;box-shadow:0 0 20px rgba(99,102,241,0.4);transform:translateY(-1px)}
+.btn-primary:active{transform:translateY(0)}
+.btn-ghost{background:transparent;color:var(--t2);border:1px solid var(--border);border-radius:var(--radius-sm);padding:10px 18px;font-size:13px;font-family:'DM Sans',sans-serif;cursor:pointer;transition:all 0.2s}
+.btn-ghost:hover{border-color:var(--border2);color:var(--t1)}
+.result-panel{margin-top:1.25rem;background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius);padding:1.25rem;display:none;animation:fadeIn 0.3s ease}
+.result-panel.show{display:block}
+@keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+.result-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:1rem}
+.result-item .rl{font-size:10px;color:var(--t3);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:6px}
+.result-item .rv{font-family:'Syne',sans-serif;font-size:22px;font-weight:700;color:var(--t1)}
+.result-item .rs{font-size:11px;color:var(--t3);margin-top:3px}
+.churn-bar-wrap{margin-top:8px}
+.churn-bar-track{height:6px;border-radius:3px;background:rgba(255,255,255,0.08);overflow:hidden}
+.churn-bar-fill{height:100%;border-radius:3px;transition:width 0.8s cubic-bezier(0.4,0,0.2,1)}
+.reco-box{margin-top:1rem;padding:10px 14px;background:var(--accentglow2);border:1px solid var(--border2);border-radius:var(--radius-sm);font-size:12px;color:var(--accent3)}
+
+/* ── Scrollbar ── */
+::-webkit-scrollbar{width:4px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px}
+
+/* ── Animations ── */
+.fade-in{opacity:0;animation:fadeIn 0.5s ease forwards}
+.fade-in:nth-child(1){animation-delay:0.05s}
+.fade-in:nth-child(2){animation-delay:0.1s}
+.fade-in:nth-child(3){animation-delay:0.15s}
+.fade-in:nth-child(4){animation-delay:0.2s}
+</style>
+</head>
+<body>
+
+<div class="glow-orb a"></div>
+<div class="glow-orb b"></div>
+
+<div class="shell">
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <div class="logo">
+      <div class="logo-mark">BI</div>
+      <div>
+        <div class="logo-text">BizIQ</div>
+        <div class="logo-sub">Intelligence Platform</div>
+      </div>
+    </div>
+
+    <nav class="nav-section">
+      <div class="nav-label">Analytics</div>
+      <div class="nav-item active">
+        <svg class="nav-icon" viewBox="0 0 16 16" fill="none"><rect x="1" y="8" width="3" height="7" rx="1" fill="currentColor" opacity="0.6"/><rect x="6" y="5" width="3" height="10" rx="1" fill="currentColor"/><rect x="11" y="2" width="3" height="13" rx="1" fill="currentColor" opacity="0.6"/></svg>
+        Overview
+      </div>
+      <div class="nav-item" onclick="scrollTo(0,0)">
+        <svg class="nav-icon" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="6" stroke="currentColor" stroke-width="1.5"/><path d="M8 5v3l2 2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+        Churn Analysis
+      </div>
+      <div class="nav-item">
+        <svg class="nav-icon" viewBox="0 0 16 16" fill="none"><path d="M2 12L6 7l3 3 5-6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        CLV Forecast
+      </div>
+      <div class="nav-item">
+        <svg class="nav-icon" viewBox="0 0 16 16" fill="none"><rect x="2" y="2" width="5" height="5" rx="1" stroke="currentColor" stroke-width="1.5"/><rect x="9" y="2" width="5" height="5" rx="1" stroke="currentColor" stroke-width="1.5"/><rect x="2" y="9" width="5" height="5" rx="1" stroke="currentColor" stroke-width="1.5"/><rect x="9" y="9" width="5" height="5" rx="1" stroke="currentColor" stroke-width="1.5"/></svg>
+        Segments
+      </div>
+    </nav>
+
+    <nav class="nav-section">
+      <div class="nav-label">Actions</div>
+      <div class="nav-item" onclick="document.getElementById('predictSection').scrollIntoView({behavior:'smooth'})">
+        <svg class="nav-icon" viewBox="0 0 16 16" fill="none"><path d="M8 2v12M2 8h12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+        Live Prediction
+      </div>
+      <div class="nav-item">
+        <svg class="nav-icon" viewBox="0 0 16 16" fill="none"><path d="M3 13L13 3M13 3H8M13 3v5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        Export Report
+      </div>
+    </nav>
+
+    <div class="sidebar-footer">
+      <div class="sidebar-badge">
+        <p>RISE Internship</p>
+        <span>Machine Learning & AI — Project 8</span>
+      </div>
+    </div>
+  </aside>
+
+  <!-- MAIN -->
+  <main class="main">
+
+    <!-- Topbar -->
+    <div class="topbar">
+      <div>
+        <div class="page-title">Customer <span>Intelligence</span></div>
+        <div class="page-sub">Real-time churn prediction & CLV analysis &nbsp;·&nbsp; 2000 customers</div>
+      </div>
+      <div class="topbar-right">
+        <div class="chip"><div class="live-dot"></div><span>Live</span></div>
+        <div class="chip"><label>Region&nbsp;</label><select id="fRegion" onchange="refresh()"><option value="all">All</option><option value="North">North</option><option value="South">South</option><option value="East">East</option><option value="West">West</option></select></div>
+        <div class="chip"><label>Risk&nbsp;</label><select id="fRisk" onchange="refresh()"><option value="all">All</option><option value="High Risk">High</option><option value="Medium Risk">Medium</option><option value="Low Risk">Low</option></select></div>
+        <div class="chip"><label>Tenure&nbsp;</label><select id="fTenure" onchange="refresh()"><option value="all">All</option><option value="new">0–12 mo</option><option value="mid">1–3 yr</option><option value="old">3+ yr</option></select></div>
+      </div>
+    </div>
+
+    <!-- KPIs -->
+    <div class="kpi-grid" id="kpiGrid"></div>
+
+    <!-- Charts Row 1 -->
+    <div class="chart-row2">
+      <div class="chart-card">
+        <div class="card-header"><div class="card-title">Churn risk segments</div><div class="card-badge">Distribution</div></div>
+        <canvas id="riskPie" height="210"></canvas>
+      </div>
+      <div class="chart-card">
+        <div class="card-header"><div class="card-title">Avg CLV by risk segment</div><div class="card-badge">Revenue</div></div>
+        <canvas id="clvBar" height="210"></canvas>
+      </div>
+    </div>
+
+    <!-- Charts Row 2 -->
+    <div class="chart-row2">
+      <div class="chart-card">
+        <div class="card-header"><div class="card-title">Churn rate by region</div><div class="card-badge">Geography</div></div>
+        <canvas id="regionBar" height="210"></canvas>
+      </div>
+      <div class="chart-card">
+        <div class="card-header"><div class="card-title">Loyalty score vs predicted CLV</div><div class="card-badge">Scatter</div></div>
+        <canvas id="scatter" height="210"></canvas>
+      </div>
+    </div>
+
+    <!-- Charts Row 3 -->
+    <div class="chart-row3">
+      <div class="chart-card">
+        <div class="card-header"><div class="card-title">Complaints vs churn</div></div>
+        <canvas id="complaintBar" height="160"></canvas>
+      </div>
+      <div class="chart-card">
+        <div class="card-header"><div class="card-title">Churn by tenure bucket</div></div>
+        <canvas id="tenureBar" height="160"></canvas>
+      </div>
+      <div class="chart-card">
+        <div class="card-header"><div class="card-title">Revenue at risk</div></div>
+        <canvas id="revBar" height="160"></canvas>
+      </div>
+    </div>
+
+    <!-- Table -->
+    <div class="table-wrap">
+      <div class="table-head">
+        <div>
+          <div class="card-title" style="font-family:'Syne',sans-serif;font-size:14px;font-weight:600">Priority retention list</div>
+          <div style="font-size:11px;color:var(--t3);margin-top:3px">High-risk customers ranked by predicted CLV</div>
+        </div>
+        <div class="search-box">
+          <svg width="12" height="12" viewBox="0 0 16 16" fill="none"><circle cx="7" cy="7" r="5" stroke="#5c5d7a" stroke-width="1.5"/><path d="M11 11l3 3" stroke="#5c5d7a" stroke-width="1.5" stroke-linecap="round"/></svg>
+          <input id="searchInput" placeholder="Search customer..." oninput="refresh()">
+        </div>
+      </div>
+      <table>
+        <thead><tr>
+          <th>ID</th><th>Region</th><th>Tenure</th><th>Complaints</th>
+          <th>Loyalty</th><th>Churn probability</th><th>Predicted CLV</th><th>Risk</th>
+        </tr></thead>
+        <tbody id="custTable"></tbody>
+      </table>
+    </div>
+
+    <!-- Predict -->
+    <div class="predict-panel" id="predictSection">
+      <h2>Live customer prediction</h2>
+      <p>Enter customer attributes to get instant churn probability and CLV estimate</p>
+      <div class="input-grid">
+        <div class="inp-group"><label>Age</label><input type="number" id="iAge" value="35" min="18" max="70"></div>
+        <div class="inp-group"><label>Tenure (mo)</label><input type="number" id="iTenure" value="12" min="1" max="72"></div>
+        <div class="inp-group"><label>Total spent $</label><input type="number" id="iSpent" value="1200" min="0"></div>
+        <div class="inp-group"><label>Loyalty 0–100</label><input type="number" id="iLoyalty" value="50" min="0" max="100"></div>
+        <div class="inp-group"><label>Complaints</label><input type="number" id="iComplaints" value="1" min="0"></div>
+        <div class="inp-group"><label>Days since buy</label><input type="number" id="iDays" value="20" min="0"></div>
+      </div>
+      <div class="predict-actions">
+        <button class="btn-primary" onclick="runPredict()">Run prediction</button>
+        <button class="btn-ghost" onclick="resetPredict()">Reset</button>
+      </div>
+      <div class="result-panel" id="resultBox">
+        <div class="result-grid" id="resultRow"></div>
+        <div class="reco-box" id="recoBox"></div>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<script>
+const N=2000;
+const rng=(seed)=>{let s=seed;return()=>{s=(s*1664525+1013904223)&0xffffffff;return(s>>>0)/4294967296;}};
+const rand=rng(42);
+const randN=(m,s)=>{const u=rand(),v=rand();return m+s*Math.sqrt(-2*Math.log(u+1e-10))*Math.cos(2*Math.PI*v);};
+const randExp=(sc)=>-sc*Math.log(rand()+1e-10);
+const randInt=(a,b)=>Math.floor(rand()*(b-a))+a;
+const clamp=(v,a,b)=>Math.min(Math.max(v,a),b);
+const regions=['North','South','East','West'];
+
+const data=[];
+for(let i=0;i<N;i++){
+  const tenure=randInt(1,72),purchases=Math.max(0,Math.round(randN(12,3)));
+  const aov=randExp(85)+20,spent=purchases*aov*(0.8+rand()*0.4);
+  const days=Math.round(randExp(30)),complaints=Math.max(0,Math.round(randN(0.8,1)));
+  const loyalty=rand()*100,email=rand(),region=regions[randInt(0,4)];
+  const clv=clamp(spent*0.3+loyalty*8+tenure*12-complaints*150+randN(0,200),50,5000);
+  const cp=clamp(0.3*(days>60?1:0)+0.25*(complaints>2?1:0)+0.2*(loyalty<30?1:0)+0.15*(tenure<6?1:0)-0.2*(email>0.5?1:0)+randN(0,0.1),0,1);
+  const churn=cp>0.35?1:0;
+  const risk=cp>0.6?'High Risk':cp>0.3?'Medium Risk':'Low Risk';
+  const predClv=clamp(spent*0.28+loyalty*7.5+tenure*11-complaints*130+randN(0,180),50,5000);
+  const churnProb=clamp(cp+randN(0,0.05),0,1);
+  data.push({id:`C${String(i+1).padStart(5,'0')}`,region,tenure,purchases,spent:+spent.toFixed(2),days,complaints,loyalty:+loyalty.toFixed(1),email:+email.toFixed(3),clv:+clv.toFixed(2),churn,risk,predClv:+predClv.toFixed(2),churnProb:+churnProb.toFixed(3)});
+}
+
+const charts={};
+const CO={
+  grid:{color:'rgba(255,255,255,0.05)'},
+  tick:{color:'#5c5d7a',font:{family:'DM Sans',size:11}},
+  title:{color:'#9b9cc4',font:{family:'DM Sans',size:11}},
+  high:'rgba(244,63,94,0.85)',med:'rgba(245,158,11,0.85)',low:'rgba(16,185,129,0.85)',
+  accent:'rgba(99,102,241,0.85)',accent2:'rgba(129,140,248,0.85)',
+  teal:'rgba(20,184,166,0.85)',purple:'rgba(168,85,247,0.85)',
+  highB:'#f43f5e',medB:'#f59e0b',lowB:'#10b981',accentB:'#6366f1',
+};
+
+const mkChart=(id,type,cfg,opts={})=>{
+  if(charts[id])charts[id].destroy();
+  const ctx=document.getElementById(id);
+  if(!ctx)return;
+  charts[id]=new Chart(ctx,{type,data:cfg,options:{
+    responsive:true,maintainAspectRatio:true,
+    plugins:{legend:{display:opts.legend??false,labels:{color:'#9b9cc4',font:{family:'DM Sans',size:11},boxWidth:10,padding:12}},tooltip:{backgroundColor:'#13141f',borderColor:'rgba(99,102,241,0.3)',borderWidth:1,titleColor:'#f0f0ff',bodyColor:'#9b9cc4',padding:10,cornerRadius:8,...(opts.tt??{})}},
+    scales:opts.scales??{},
+    ...(opts.extra??{})
+  }});
+};
+
+function getFiltered(){
+  const reg=document.getElementById('fRegion').value;
+  const risk=document.getElementById('fRisk').value;
+  const ten=document.getElementById('fTenure').value;
+  const search=(document.getElementById('searchInput')?.value||'').toLowerCase();
+  return data.filter(d=>{
+    if(reg!=='all'&&d.region!==reg)return false;
+    if(risk!=='all'&&d.risk!==risk)return false;
+    if(ten==='new'&&d.tenure>12)return false;
+    if(ten==='mid'&&(d.tenure<=12||d.tenure>36))return false;
+    if(ten==='old'&&d.tenure<=36)return false;
+    if(search&&!d.id.toLowerCase().includes(search)&&!d.region.toLowerCase().includes(search))return false;
+    return true;
+  });
+}
+
+function refresh(){
+  const fd=getFiltered();
+  const total=fd.length;
+  if(!total)return;
+  const churned=fd.filter(d=>d.churn).length;
+  const churnRate=(churned/total*100).toFixed(1);
+  const avgClv=(fd.reduce((s,d)=>s+d.predClv,0)/total).toFixed(0);
+  const highRisk=fd.filter(d=>d.risk==='High Risk');
+  const revAtRisk=highRisk.reduce((s,d)=>s+d.predClv,0).toFixed(0);
+
+  document.getElementById('kpiGrid').innerHTML=`
+    <div class="kpi-card fade-in"><div class="kpi-icon" style="background:rgba(99,102,241,0.12);color:var(--accent2)">&#9632;</div><div class="kpi-label">Total customers</div><div class="kpi-val">${total.toLocaleString()}</div><div class="kpi-sub">${fd.filter(d=>d.tenure>24).length} long-tenure</div></div>
+    <div class="kpi-card danger fade-in"><div class="kpi-icon" style="background:rgba(244,63,94,0.12);color:var(--danger)">&#9652;</div><div class="kpi-label">Churn rate</div><div class="kpi-val">${churnRate}%</div><div class="kpi-sub dn">${churned} at-risk</div></div>
+    <div class="kpi-card success fade-in"><div class="kpi-icon" style="background:rgba(16,185,129,0.12);color:var(--success)">$</div><div class="kpi-label">Avg predicted CLV</div><div class="kpi-val">$${Number(avgClv).toLocaleString()}</div><div class="kpi-sub up">per customer</div></div>
+    <div class="kpi-card warn fade-in"><div class="kpi-icon" style="background:rgba(245,158,11,0.12);color:var(--warn)">!</div><div class="kpi-label">Revenue at risk</div><div class="kpi-val">$${Number(revAtRisk).toLocaleString()}</div><div class="kpi-sub warn">${highRisk.length} high-risk</div></div>
+  `;
+
+  const rc={h:fd.filter(d=>d.risk==='High Risk').length,m:fd.filter(d=>d.risk==='Medium Risk').length,l:fd.filter(d=>d.risk==='Low Risk').length};
+  mkChart('riskPie','doughnut',{labels:['High Risk','Medium Risk','Low Risk'],datasets:[{data:[rc.h,rc.m,rc.l],backgroundColor:[CO.high,CO.med,CO.low],borderColor:[CO.highB,CO.medB,CO.lowB],borderWidth:1,hoverOffset:6}]},{legend:true,extra:{cutout:'65%'}});
+
+  const riskG=['High Risk','Medium Risk','Low Risk'];
+  const clvByR=riskG.map(r=>{const g=fd.filter(d=>d.risk===r);return g.length?+(g.reduce((s,d)=>s+d.predClv,0)/g.length).toFixed(0):0;});
+  mkChart('clvBar','bar',{labels:['High','Medium','Low'],datasets:[{data:clvByR,backgroundColor:[CO.high,CO.med,CO.low],borderColor:[CO.highB,CO.medB,CO.lowB],borderWidth:1,borderRadius:6}]},{scales:{x:{grid:{display:false},ticks:CO.tick},y:{grid:CO.grid,ticks:{...CO.tick,callback:v=>`$${v}`}}}});
+
+  const regC=regions.map(r=>{const g=fd.filter(d=>d.region===r);return g.length?+(g.filter(d=>d.churn).length/g.length*100).toFixed(1):0;});
+  mkChart('regionBar','bar',{labels:regions,datasets:[{data:regC,backgroundColor:[CO.accent,CO.accent2,CO.teal,CO.purple],borderColor:[CO.accentB,CO.accentB,CO.teal,CO.purple],borderWidth:1,borderRadius:6}]},{scales:{x:{grid:{display:false},ticks:CO.tick},y:{grid:CO.grid,ticks:{...CO.tick,callback:v=>`${v}%`}}}});
+
+  const samp=fd.filter((_,i)=>i%5===0).slice(0,100);
+  mkChart('scatter','scatter',{datasets:[
+    {label:'Retained',data:samp.filter(d=>!d.churn).map(d=>({x:+d.loyalty.toFixed(0),y:+d.predClv.toFixed(0)})),backgroundColor:'rgba(16,185,129,0.45)',pointRadius:3.5,pointHoverRadius:5},
+    {label:'Churned',data:samp.filter(d=>d.churn).map(d=>({x:+d.loyalty.toFixed(0),y:+d.predClv.toFixed(0)})),backgroundColor:'rgba(244,63,94,0.55)',pointRadius:3.5,pointHoverRadius:5},
+  ]},{legend:true,scales:{x:{grid:CO.grid,ticks:CO.tick,title:{display:true,text:'Loyalty score',...CO.title}},y:{grid:CO.grid,ticks:{...CO.tick,callback:v=>`$${v}`},title:{display:true,text:'CLV ($)',...CO.title}}}});
+
+  const cb=[0,1,2,3,4,5].map(c=>{const g=fd.filter(d=>d.complaints===c);return g.length?+(g.filter(d=>d.churn).length/g.length*100).toFixed(1):0;});
+  mkChart('complaintBar','bar',{labels:['0','1','2','3','4','5+'],datasets:[{data:cb,backgroundColor:'rgba(244,63,94,0.7)',borderColor:CO.highB,borderWidth:1,borderRadius:5}]},{scales:{x:{grid:{display:false},ticks:CO.tick},y:{grid:CO.grid,ticks:{...CO.tick,callback:v=>`${v}%`}}}});
+
+  const tb=[{l:'0–6m',fn:d=>d.tenure<=6},{l:'6–12m',fn:d=>d.tenure>6&&d.tenure<=12},{l:'1–2y',fn:d=>d.tenure>12&&d.tenure<=24},{l:'2–3y',fn:d=>d.tenure>24&&d.tenure<=36},{l:'3y+',fn:d=>d.tenure>36}];
+  const tc=tb.map(b=>{const g=fd.filter(b.fn);return g.length?+(g.filter(d=>d.churn).length/g.length*100).toFixed(1):0;});
+  mkChart('tenureBar','bar',{labels:tb.map(b=>b.l),datasets:[{data:tc,backgroundColor:'rgba(99,102,241,0.7)',borderColor:CO.accentB,borderWidth:1,borderRadius:5}]},{scales:{x:{grid:{display:false},ticks:CO.tick},y:{grid:CO.grid,ticks:{...CO.tick,callback:v=>`${v}%`}}}});
+
+  const rv=riskG.map(r=>+(fd.filter(d=>d.risk===r).reduce((s,d)=>s+d.predClv,0)).toFixed(0));
+  mkChart('revBar','bar',{labels:['High','Medium','Low'],datasets:[{data:rv,backgroundColor:[CO.high,CO.med,CO.low],borderColor:[CO.highB,CO.medB,CO.lowB],borderWidth:1,borderRadius:5}]},{scales:{x:{grid:{display:false},ticks:CO.tick},y:{grid:CO.grid,ticks:{...CO.tick,callback:v=>`$${(v/1000).toFixed(0)}k`}}}});
+
+  const topH=fd.filter(d=>d.risk==='High Risk').sort((a,b)=>b.predClv-a.predClv).slice(0,12);
+  document.getElementById('custTable').innerHTML=topH.map(d=>{
+    const pct=Math.round(d.churnProb*100);
+    const barColor=pct>60?'#f43f5e':pct>30?'#f59e0b':'#10b981';
+    return`<tr>
+      <td class="mono">${d.id}</td>
+      <td>${d.region}</td>
+      <td>${d.tenure} mo</td>
+      <td>${d.complaints}</td>
+      <td>${d.loyalty.toFixed(0)}/100</td>
+      <td><div class="prob-bar"><span style="color:var(--t1);font-weight:500;min-width:32px">${pct}%</span><div class="prob-track"><div class="prob-fill" style="width:${pct}%;background:${barColor}"></div></div></div></td>
+      <td style="color:var(--t1);font-weight:500">$${d.predClv.toFixed(0)}</td>
+      <td><span class="badge high">High Risk</span></td>
+    </tr>`;
+  }).join('');
+}
+
+function runPredict(){
+  const age=+document.getElementById('iAge').value;
+  const tenure=+document.getElementById('iTenure').value;
+  const spent=+document.getElementById('iSpent').value;
+  const loyalty=+document.getElementById('iLoyalty').value;
+  const complaints=+document.getElementById('iComplaints').value;
+  const days=+document.getElementById('iDays').value;
+
+  const cp=clamp(0.3*(days>60?1:0)+0.25*(complaints>2?1:0)+0.2*(loyalty<30?1:0)+0.15*(tenure<6?1:0)-0.2*(0.5>0.5?1:0),0,1);
+  const clv=clamp(spent*0.28+loyalty*7.5+tenure*11-complaints*130,50,15000);
+  const risk=cp>0.6?'High Risk':cp>0.3?'Medium Risk':'Low Risk';
+  const riskColor=cp>0.6?'var(--danger)':cp>0.3?'var(--warn)':'var(--success)';
+  const badgeClass=cp>0.6?'high':cp>0.3?'med':'low';
+  const pct=Math.round(cp*100);
+  const barColor=cp>0.6?'#f43f5e':cp>0.3?'#f59e0b':'#10b981';
+
+  const recos={
+    'High Risk':'Immediate action needed — offer personalised discount, assign dedicated account manager, send win-back campaign within 48 hours.',
+    'Medium Risk':'Monitor closely — enrol in loyalty rewards programme, send re-engagement email, offer free upgrade or bonus.',
+    'Low Risk':'Healthy customer — focus on upselling premium products and referral programme to maximise CLV.'
+  };
+
+  const rb=document.getElementById('resultBox');
+  const rr=document.getElementById('resultRow');
+  rb.classList.add('show');
+  rr.innerHTML=`
+    <div class="result-item"><div class="rl">Churn probability</div><div class="rv" style="color:${riskColor}">${pct}%</div><div class="churn-bar-wrap"><div class="churn-bar-track"><div class="churn-bar-fill" style="width:${pct}%;background:${barColor}"></div></div></div></div>
+    <div class="result-item"><div class="rl">Predicted CLV</div><div class="rv">$${clv.toFixed(0)}</div><div class="rs">lifetime value estimate</div></div>
+    <div class="result-item"><div class="rl">Risk segment</div><div class="rv" style="font-size:16px;margin-top:4px"><span class="badge ${badgeClass}">${risk}</span></div></div>
+    <div class="result-item"><div class="rl">Priority score</div><div class="rv">${Math.round(clv*cp/100)}</div><div class="rs">CLV × churn risk</div></div>
+  `;
+  document.getElementById('recoBox').textContent='Recommendation: '+recos[risk];
+}
+
+function resetPredict(){
+  document.getElementById('iAge').value=35;
+  document.getElementById('iTenure').value=12;
+  document.getElementById('iSpent').value=1200;
+  document.getElementById('iLoyalty').value=50;
+  document.getElementById('iComplaints').value=1;
+  document.getElementById('iDays').value=20;
+  document.getElementById('resultBox').classList.remove('show');
+}
+
+refresh();
+</script>
+</body>
+</html>
