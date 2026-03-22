@@ -125,15 +125,15 @@ Synthetic retail customer dataset — **2,000 customers**, **21 features**
 
 ## 📈 Key Results
 
-- 🔴 **110 high-risk customers** identified for immediate retention action
-- 💰 **$82,678** in predicted CLV at risk from high-churn customers
-- 📉 Churn rate: **6.9%** of customer base
-- 🎯 CLV model explains **87.8%** of revenue variance (R² = 0.8782)
-- 🏆 Best churn model ROC-AUC: **0.9281** — strong ranking ability
+- **110 high-risk customers** identified for immediate retention action
+- **$82,678** in predicted CLV at risk from high-churn customers
+- Churn rate: **6.9%** of customer base
+- CLV model explains **87.8%** of revenue variance (R² = 0.8782)
+- Best churn model ROC-AUC: **0.9281** — strong ranking ability
 
 ---
 
-## 💡 Feature Engineering
+## 💡 Features
 
 New features created beyond raw data:
 
@@ -153,11 +153,11 @@ New features created beyond raw data:
 
 **[https://rise-capstone-business-intelligence.vercel.app](https://rise-capstone-business-intelligence.vercel.app)**
 
-- 📊 **4 KPI cards** — total customers, churn rate, avg CLV, revenue at risk
-- 🔽 **Interactive filters** — by Region, Risk level, and Tenure
-- 📉 **7 live charts** — risk distribution, CLV by segment, churn by region, loyalty scatter, complaints analysis, tenure analysis, revenue at risk
-- 📋 **Priority retention table** — top high-risk customers ranked by CLV with churn probability bars
-- 🎯 **Live prediction tool** — enter any customer's data, get instant churn probability + CLV + risk segment + retention recommendation
+- **4 KPI cards** — total customers, churn rate, avg CLV, revenue at risk
+- **Interactive filters** — by Region, Risk level, and Tenure
+- **7 live charts** — risk distribution, CLV by segment, churn by region, loyalty scatter, complaints analysis, tenure analysis, revenue at risk
+- **Priority retention table** — top high-risk customers ranked by CLV with churn probability bars
+- **Live prediction tool** — enter any customer's data, get instant churn probability + CLV + risk segment + retention recommendation
 
 ---
 
